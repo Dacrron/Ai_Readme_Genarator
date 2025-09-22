@@ -8,7 +8,7 @@ class Generator:
 
     def summarize_code(self, llm, code_text):
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size = 300,
+            chunk_size = 3000,
             chunk_overlap = 200,
             separators = ["\nFile:", "\n\n", "\n", " ","" ]
         )
@@ -32,8 +32,8 @@ class Generator:
                         with open(file_path, 'r', encoding='utf-8') as f:
                             content = f.read()
                             example_docs.append(Document(
-                                page_content= content
-                                metadata = {"Source" : file_path, "type" = "example" }
+                                page_content= content,
+                                metadata = {"Source" : file_path, "type" : "example" }
                             ))
                     except Exception as e:
                         print(f"Failed to read the file -> {file}: {e}")
@@ -71,7 +71,7 @@ class Generator:
         CONSISE SUMMARY : 
         """
 
-        combine_prompt = PromptTemplate(template=combine_prompt, input_variables=["text"])
+        combine_prompt = PromptTemplate(template=combine_template, input_variables=["text"])
 
         if(len(summary) > 2000):
             print(f"Summary is large {len(summary) } Considering first...")
@@ -87,7 +87,7 @@ class Generator:
             print(f"Split summary into {len(split_docs)} chunks")
 
             chain = load_summarize_chain(llm, chain_type= "map_reduce", map_prompt = map_prompt, combine_prompt = combine_prompt, verbose = True )
-            condensed_result = chain.invoke({"input documents": split_docs})
+            condensed_result = chain.invoke({"input_documents": split_docs})
             condensed_summary = condensed_result if isinstance(condensed_result, str) else condensed_result.get('output_text', '')
             print(f"Condensed the summary from {len(summary)} to {len(condensed_summary)}")
 
@@ -97,21 +97,25 @@ class Generator:
         
         prompt= f"""
         You are a professional technical writer. Based on the following codebase summary, generate a complete README.md file. 
+        Use proper Markdown headings (#, ##), bullet points, code blocks, and leave line breaks between sections.
+
         Include:
-        - Project Title: Clear and descriptive
-        - Description: Overview of what the project does and its purpose
-        - Architecture: How the components work together (if applicable)
-        - Prerequisites: Required software, accounts, and configurations
-        - Installation: Step-by-step setup instructions
-        - Configuration: Environment variables, settings, and Azure-specific configurations
-        - Usage: How to use the software with examples
-        - API Reference: If the project exposes APIs (if applicable)
-        - Development: Instructions for contributors (if applicable)
-        - Deployment: How to deploy to Azure (if applicable)
-        - Security: Security considerations and best practices
-        - Troubleshooting: Common issues and solutions
-        - License: Project license information
+        - **Project Title**: Clear and descriptive
+        - **Description**: Overview of what the project does and its purpose
+        - **Features**: Key features and capabilities
+        - **Technology Stack**: Languages, frameworks, and tools used
+        - **Prerequisites**: Required software and dependencies
+        - **Installation**: Step-by-step setup instructions
+        - **Usage**: How to use the software with examples
+        - **Configuration**: Environment variables and settings
+        - **API Documentation**: If applicable
+        - **Contributing**: Guidelines for contributors
+        - **License**: Project license information
 
         Summary:
         {condensed_summary}
         """
+        try:
+            return llm.invoke(prompt)
+        except Exception as e:
+            print(f"Error caught -> {e}")
