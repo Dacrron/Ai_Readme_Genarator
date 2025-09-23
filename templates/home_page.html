@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>README Generator</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fab fa-github"></i>
+                    <h1>README Generator</h1>
+                </div>
+                <p class="subtitle">Transform your GitHub repositories with beautiful, comprehensive README files</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Input Section -->
+            <section class="input-section">
+                <div class="input-card">
+                    <h2>Generate Your README</h2>
+                    <p class="input-description">Enter your GitHub repository URL to automatically generate a professional README.md file</p>
+                    
+                    <form class="url-form" id="readmeForm">
+                        <div class="input-group">
+                            <i class="fab fa-github input-icon"></i>
+                            <input 
+                                type="url" 
+                                id="githubUrl" 
+                                placeholder="https://github.com/username/repository"
+                                class="url-input"
+                                required
+                            >
+                        </div>
+                        <button type="submit" class="generate-btn">
+                            <i class="fas fa-magic"></i>
+                            Generate README
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Preview Section -->
+            <section class="preview-section" id="previewSection">
+                <div class="preview-card">
+                    <div class="preview-header">
+                        <h3>
+                            <i class="fas fa-file-alt"></i>
+                            README Preview
+                        </h3>
+                        <div class="preview-actions">
+                            <button class="action-btn copy-btn" id="copyBtn">
+                                <i class="fas fa-copy"></i>
+                                Copy
+                            </button>
+                            <button class="action-btn download-btn" id="downloadBtn">
+                                <i class="fas fa-download"></i>
+                                Download
+                            </button>
+                        </div>
+                    </div>
+                    <div class="preview-content" id="previewContent">
+                        <!-- Generated README will appear here -->
+                        <div class="placeholder">
+                            <i class="fas fa-file-alt placeholder-icon"></i>
+                            <p>Your generated README will appear here</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 README Generator. Crafted with <i class="fas fa-heart"></i> for developers</p>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Generating your README...</p>
+        </div>
+    </div>
+
+<script>
+    // Form submission handler
+    document.getElementById('readmeForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const url = document.getElementById('githubUrl').value;
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const previewSection = document.getElementById('previewSection');
+        const previewContent = document.getElementById('previewContent');
+        
+        // Show loading
+        loadingOverlay.style.display = 'flex';
+        
+        try {
+            // Call FastAPI backend
+            const response = await fetch('/api/generate-readme', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    repo_url: url,
+                    generation_method: "Standard README"
+                })
+            });
+
+            const data = await response.json();
+
+            // Hide loading
+            loadingOverlay.style.display = 'none';
+            
+            if (data.success) {
+                previewSection.style.display = 'block';
+                previewContent.innerHTML = `<pre><code>${data.readme_content}</code></pre>`;
+                previewSection.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                previewContent.innerHTML = `<p style="color:red;">Error: ${data.error_message}</p>`;
+            }
+        } catch (err) {
+            loadingOverlay.style.display = 'none';
+            previewContent.innerHTML = `<p style="color:red;">Request failed: ${err}</p>`;
+        }
+    });
+
+    // Copy functionality
+    document.getElementById('copyBtn').addEventListener('click', function() {
+        const content = document.getElementById('previewContent').textContent;
+        navigator.clipboard.writeText(content).then(() => {
+            this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(() => {
+                this.innerHTML = '<i class="fas fa-copy"></i> Copy';
+            }, 2000);
+        });
+    });
+
+    // Download functionality
+    document.getElementById('downloadBtn').addEventListener('click', function() {
+        const content = document.getElementById('previewContent').textContent;
+        const blob = new Blob([content], { type: 'text/markdown' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'README.md';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    });
+</script>
+
+</body>
+</html>

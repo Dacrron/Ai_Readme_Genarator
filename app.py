@@ -17,12 +17,15 @@ class ReadmeGeneratorApp:
         local_path = self.helper.clone_repo(github_url, repo_name)
         code_text = self.helper.extract_code_from_repo(local_path)
         summary = self.generator.summarize_code(self.llm , code_text)
+        readme_content = self.generator.generate_readme(self.llm, summary)
 
-        if generation_method == "STANDARD README":
-            readme_content = self.generator.generate_readme(self.llm, summary)
-        else:
-            # readme_content = self.generator.generate_readme_with_examples_vectorstore(self.llm, self.embeddings, summary)
-            print("This feature is yet to be implemented")
-            return "Feature will be updated Soon.."
+        # if generation_method == "STANDARD README":
+        #     readme_content = self.generator.generate_readme(self.llm, summary)
+        # else:
+        #     # readme_content = self.generator.generate_readme_with_examples_vectorstore(self.llm, self.embeddings, summary)
+        #     print("This feature is yet to be implemented")
+        #     readme_content = self.generator.generate_readme(self.llm, summary)
+            
+            
 
         return readme_content
