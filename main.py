@@ -1,3 +1,5 @@
+#This is for testing before the front end FAST API implementation 
+
 from app import ReadmeGeneratorApp
 import requests
 
@@ -17,7 +19,7 @@ def test_repo_access(github_url):
     return False
 
 # Test
-url = "https://github.com/mcaupybugs/LeetcodeTimer"
+url = "github URL"
 if test_repo_access(url):
     print("Repository is accessible")
     print(readmeGeneratorApp.generate_readme_from_repo_url(url))
