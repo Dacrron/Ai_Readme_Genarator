@@ -44,37 +44,48 @@ async def home_page(request : Request):
 @app.post("/api/generate-readme", response_model= ReadmeResponse)
 async def generate_readme(request : ReadmeRequest, http_request : Request):
 
-   ##################################FOR TEST########################################################### 
+
+       ##################################   Use this fOR tEST    ########################################################### 
     #  return ReadmeResponse(
     #     success=True,
-    #     readme_content="# Sample Project\n\nThis is a dummy README for testing.",
+    #     readme_content="",
     #     error_message="",
     #     repo_url=request.repo_url,
     #     generation_method=request.generation_method
     # )
-    
-    if not request.repo_url.startswith(('https://github.com/', 'http://github.com/')):
-        return ReadmeResponse(
-            success=False,
-            error_message="Please provide a valid GitHub repository URL",
-            repo_url=request.repo_url,
-            generation_method=request.generation_method
-        )
 
-    try:
-        readme_content = readmeapp.generate_readme_from_repo_url(request.repo_url, request.generation_method)
-        
-        return ReadmeResponse(
-            success= True,
-            readme_content=  readme_content,
-            repo_url= request.repo_url,
-           generation_method= request.generation_method
-        )
-        
-    except Exception as e:
-        return ReadmeResponse(
-            success=False,
-            error_message= str(e),
-            repo_url= request.repo_url,
-            generation_method=request.generation_method
-        )
+     if not request.repo_url.startswith(('https://github.com/', 'http://github.com/')):
+         return ReadmeResponse(
+             success=False,
+             error_message="Please provide a valid GitHub repository URL",
+             repo_url=request.repo_url,
+             generation_method=request.generation_method
+         )
+     try:
+         
+         print(f"Generating README for: {request.repo_url}")
+         readme_response = readmeapp.generate_readme_from_repo_url(request.repo_url, request.generation_method)
+       
+         # Extract the string content from AIMessage object FIRST
+         if hasattr(readme_response, 'content'):
+             readme_content = readme_response.content
+         elif isinstance(readme_response, str):
+             readme_content = readme_response
+         else:
+             # Convert to string if it's some other type
+             readme_content = str(readme_response)
+       
+         return ReadmeResponse(
+             success=True,
+             readme_content=readme_content,  
+             repo_url=request.repo_url,
+             generation_method=request.generation_method
+         )
+       
+     except Exception as e:
+         return ReadmeResponse(
+             success=False,
+             error_message=f"An error occurred while generating the README: {str(e)}",
+             repo_url=request.repo_url,
+             generation_method=request.generation_method
+       )

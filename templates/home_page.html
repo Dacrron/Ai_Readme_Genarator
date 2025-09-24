@@ -14,7 +14,7 @@
             <div class="header-content">
                 <div class="logo">
                     <i class="fab fa-github"></i>
-                    <h1>README Generator</h1>
+                    <h1>Ai README Generator</h1>
                 </div>
                 <p class="subtitle">Transform your GitHub repositories with beautiful, comprehensive README files</p>
             </div>
@@ -39,11 +39,29 @@
                                 required
                             >
                         </div>
+                        <div class="input-group">
+                            
+                            <select id="generationMethod" class="method-select">
+                                <option value="Standard README">Standard README</option>
+                                <option value="Comprehensive README">Readme through example(Not implemented yet)</option>
+                                
+                            </select>
+                        </div>
                         <button type="submit" class="generate-btn">
                             <i class="fas fa-magic"></i>
                             Generate README
                         </button>
                     </form>
+                </div>
+            </section>
+
+            <!-- Error Section -->
+            <section class="error-section" id="errorSection" style="display: none;">
+                <div class="error-card">
+                    <div class="error-content">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p id="errorMessage"></p>
+                    </div>
                 </div>
             </section>
 
@@ -79,7 +97,7 @@
 
         <!-- Footer -->
         <footer class="footer">
-            <p>&copy; 2024 README Generator. Crafted with <i class="fas fa-heart"></i> for developers</p>
+            <p>&copy; 2024 README Generator. Crafted with <i class="fas fa-heart"></i> </p>
         </footer>
     </div>
 
@@ -91,73 +109,169 @@
         </div>
     </div>
 
-<script>
-    // Form submission handler
-    document.getElementById('readmeForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const url = document.getElementById('githubUrl').value;
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        const previewSection = document.getElementById('previewSection');
-        const previewContent = document.getElementById('previewContent');
-        
-        // Show loading
-        loadingOverlay.style.display = 'flex';
-        
-        try {
-            // Call FastAPI backend
-            const response = await fetch('/api/generate-readme', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    repo_url: url,
-                    generation_method: "Standard README"
-                })
-            });
+    <script>
+        let generatedReadmeContent = '';
 
-            const data = await response.json();
-
-            // Hide loading
-            loadingOverlay.style.display = 'none';
+        // Form submission handler
+        document.getElementById('readmeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
             
-            if (data.success) {
-                previewSection.style.display = 'block';
-                previewContent.innerHTML = `<pre><code>${data.readme_content}</code></pre>`;
-                previewSection.scrollIntoView({ behavior: 'smooth' });
-            } else {
-                previewContent.innerHTML = `<p style="color:red;">Error: ${data.error_message}</p>`;
+            const url = document.getElementById('githubUrl').value;
+            const method = document.getElementById('generationMethod').value;
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const previewSection = document.getElementById('previewSection');
+            const errorSection = document.getElementById('errorSection');
+            
+            // Hide error and preview sections
+            errorSection.style.display = 'none';
+            previewSection.style.display = 'none';
+            
+            // Show loading
+            loadingOverlay.style.display = 'flex';
+            
+            try {
+                const response = await fetch('/api/generate-readme', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        repo_url: url,
+                        generation_method: method
+                    })
+                });
+
+                const data = await response.json();
+                
+                // Hide loading
+                loadingOverlay.style.display = 'none';
+                
+                if (data.success) {
+                    // Store the generated content
+                    generatedReadmeContent = data.readme_content;
+                    
+                    // Display the README content with proper formatting
+                    document.getElementById('previewContent').innerHTML = 
+                        `<pre><code>${escapeHtml(data.readme_content)}</code></pre>`;
+                    
+                    // Show preview section
+                    previewSection.style.display = 'block';
+                    
+                    // Scroll to preview
+                    previewSection.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    // Show error
+                    document.getElementById('errorMessage').textContent = data.error_message;
+                    errorSection.style.display = 'block';
+                    errorSection.scrollIntoView({ behavior: 'smooth' });
+                }
+                
+            } catch (error) {
+                // Hide loading
+                loadingOverlay.style.display = 'none';
+                
+                // Show error
+                document.getElementById('errorMessage').textContent = 
+                    'Failed to generate README. Please check your internet connection and try again.';
+                errorSection.style.display = 'block';
+                errorSection.scrollIntoView({ behavior: 'smooth' });
+                
+                console.error('Error:', error);
             }
-        } catch (err) {
-            loadingOverlay.style.display = 'none';
-            previewContent.innerHTML = `<p style="color:red;">Request failed: ${err}</p>`;
-        }
-    });
-
-    // Copy functionality
-    document.getElementById('copyBtn').addEventListener('click', function() {
-        const content = document.getElementById('previewContent').textContent;
-        navigator.clipboard.writeText(content).then(() => {
-            this.innerHTML = '<i class="fas fa-check"></i> Copied!';
-            setTimeout(() => {
-                this.innerHTML = '<i class="fas fa-copy"></i> Copy';
-            }, 2000);
         });
-    });
 
-    // Download functionality
-    document.getElementById('downloadBtn').addEventListener('click', function() {
-        const content = document.getElementById('previewContent').textContent;
-        const blob = new Blob([content], { type: 'text/markdown' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'README.md';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-    });
-</script>
+        // Copy functionality
+        document.getElementById('copyBtn').addEventListener('click', function() {
+            if (generatedReadmeContent) {
+                navigator.clipboard.writeText(generatedReadmeContent).then(() => {
+                    const originalContent = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    this.classList.add('copied');
+                    setTimeout(() => {
+                        this.innerHTML = originalContent;
+                        this.classList.remove('copied');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy:', err);
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = generatedReadmeContent;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    
+                    const originalContent = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    setTimeout(() => {
+                        this.innerHTML = originalContent;
+                    }, 2000);
+                });
+            }
+        });
 
+        // Download functionality
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            if (generatedReadmeContent) {
+                const blob = new Blob([generatedReadmeContent], { type: 'text/markdown' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'README.md';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }
+        });
+
+        // Utility function to escape HTML characters
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Add some basic styles for error handling
+        const style = document.createElement('style');
+        style.textContent = `
+            .error-section {
+                padding: 20px 0;
+            }
+            .error-card {
+                background: #fee;
+                border: 1px solid #fcc;
+                border-radius: 8px;
+                padding: 20px;
+                margin: 0 20px;
+            }
+            .error-content {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: #c33;
+            }
+            .error-content i {
+                font-size: 1.2em;
+            }
+            .method-select {
+                width: 100%;
+                padding: 12px 45px 12px 15px;
+                border: 2px solid #e1e5e9;
+                border-radius: 8px;
+                font-size: 16px;
+                background: white;
+                outline: none;
+                transition: border-color 0.3s ease;
+            }
+            .method-select:focus {
+                border-color: #007bff;
+            }
+            .copied {
+                background-color: #28a745 !important;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
 </body>
 </html>

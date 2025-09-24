@@ -8,7 +8,7 @@ from langchain_openai import OpenAIEmbeddings
 
 load_dotenv()
 
-
+############################  For USING OPEN AI #######################################
 # class readme_brain():
 #     def __init__(self):
 #         self.api_key = os.getenv("OPEN_API_KEY") 
@@ -47,31 +47,7 @@ load_dotenv()
 #             model="models/embedding-001"
 #         )
 
-##################################### For Perplexity #####################################################
 
-
-
-# class readme_brain():
-#     def __init__(self):
-#         self.api_key = os.getenv("PPLX_API_KEY") 
-        
-        
-
-#     def getLLM(self, max_tokens: int = 1000, temperature: float = 0.3):
-#         return ChatPerplexity(
-#             pplx_api_key=self.api_key,
-#             temperature=temperature,
-#             max_tokens=max_tokens,
-#             model="llama-3.1-sonar-large-128k-online"
-#         )
-
-#     def getEmbeddingsModel(self):
-#         # Perplexity doesn't offer embeddings, so we still use OpenAI for this
-#         self.openai_key = os.getenv("OPENAI_API_KEY")
-#         return OpenAIEmbeddings(
-#             api_key = self.openai_key,
-#             model="text-embedding-3-large"
-#         )
 
 
 class readme_brain():
@@ -89,9 +65,11 @@ class readme_brain():
         )
 
     def getEmbeddingsModel(self):
-        # Perplexity doesn't offer embeddings, so we still use OpenAI for this
+        
         self.openai_key = os.getenv("OPENAI_API_KEY")
         return OpenAIEmbeddings(
             api_key=self.openai_key,
             model="text-embedding-3-large"
         )
+    
+#Embeddings are basically for another feature which has not been added

@@ -73,7 +73,7 @@ class Generator:
 
         combine_prompt = PromptTemplate(template=combine_template, input_variables=["text"])
 
-        if(len(summary) > 2000):
+        if(len(summary) > 20000):
             print(f"Summary is large {len(summary) } Considering first...")
 
             text_spliter = RecursiveCharacterTextSplitter(

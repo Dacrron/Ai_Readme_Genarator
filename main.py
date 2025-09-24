@@ -19,7 +19,7 @@ def test_repo_access(github_url):
     return False
 
 # Test
-url = "github URL"
+url = "github url here"
 if test_repo_access(url):
     print("Repository is accessible")
     print(readmeGeneratorApp.generate_readme_from_repo_url(url))
