@@ -60,5 +60,7 @@
     
 ## Screenshots
 
+![App Screenshot](https://github.com/Dacrron/Ai_Readme_Genarator/blob/main/static/2.png)
 ![App Screenshot](https://github.com/Dacrron/Ai_Readme_Genarator/blob/main/static/1.png)
+
 
